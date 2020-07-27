@@ -12,7 +12,7 @@ const doGet = () => {
   const templateFileName = prop === 'true' ? 'sorry' : 'index'
   const template = HtmlService.createTemplateFromFile(templateFileName).evaluate()
   template
-    .setTitle('授業パッケージ一覧')
+    .setTitle('F.MOCE教員アプリ')
   return template
 }
 

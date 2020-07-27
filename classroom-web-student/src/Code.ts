@@ -11,7 +11,7 @@ const doGet = () => {
   const templateFileName = prop === 'true' ? 'sorry' : 'index'
   const template = HtmlService.createTemplateFromFile(templateFileName).evaluate()
   template
-    .setTitle('福大リモート授業')
+    .setTitle('F.MOCE学生アプリ')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
   return template
 }
