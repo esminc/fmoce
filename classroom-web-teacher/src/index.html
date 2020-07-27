@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/octicons/8.5.0/build.css">
+    <style type="text/css">
+      #user-info {
+        height: 70px;
+        padding: 10px;
+      }
+
+      #grade-selection {
+        height: 70px;
+        padding: 10px;
+      }
+
+      #loading-spinner {
+        vertical-align: middle;
+      }
+
+      #subject-empty-msg {
+        display: inline;
+        color: red;
+        font-weight: bold;
+        margin-left: 20px;
+      }
+
+      .table-wrapper {
+        overflow-y: auto;
+        height: calc(100vh - 140px);
+      }
+
+      .table-wrapper thead th {
+        position: sticky;
+        top: 0;
+        border-top: 2px;
+        text-align: center;
+      }
+
+      .table-wrapper tbody td {
+        text-align: center;
+      }
+
+      .subject-name {
+        text-align: left !important;
+      }
+
+      .lecture-name {
+        text-align: left !important;
+      }
+
+      .external-url-icon {
+        vertical-align: middle;
+      }
+
+      .external-url-icon div {
+        width: 1.5em;
+        margin: 0 auto;
+      }
+
+      .external-url-icon div:hover {
+        cursor: pointer;
+      }
+
+      .external-url-icon div svg {
+        color: #1A0DAB;
+      }
+
+      .attendance-mng {
+        color: #1A0DAB;
+        width: 100% !important;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="container-fluid">
+
+      <div id="user-info" class="row"></div>
+      <div id="grade-selection">
+        <select class="custom-select col-5" onchange="getClassesBy(this);">
+          <option disabled selected value>学年を選択してください</option>
+          <option value="1">1年生</option>
+          <option value="2">2年生</option>
+          <option value="3">3年生</option>
+          <option value="4">4年生</option>
+          <option value="5">5年生</option>
+          <option value="6">6年生</option>
+          <option value="7">7年生</option>
+          <option value="8">8年生</option>
+          <option value="9">9年生</option>
+          <option value="10">10年生</option>
+        </select>
+        <div id="loading-spinner" hidden class="spinner-border text-primary" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+        <div id="subject-empty-msg" hidden>
+          <span>担当科目がありません。</span>
+        </div>
+      </div>
+      <div class="row table-wrapper">
+        <table class="table table-striped">
+          <thead class="thead-dark">
+            <tr>
+              <th scope="col" style="width: 25%">科目</th>
+              <th scope="col" style="width: 25%">講義</th>
+              <th scope="col" style="width: 15%">授業パッケージ</th>
+              <th scope="col" style="width: 20%">ミニッツペーパー</th>
+              <th scope="col" style="width: 15%"></th>
+            </tr>
+          </thead>
+          <tbody id="subjects-body">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      window.onload = () => {
+        google.script.run
+          .withSuccessHandler((mailAddress) => {
+            const _  = '<h4>' + mailAddress + ' さん</h4>'
+            document.getElementById('user-info').insertAdjacentHTML('afterbegin', _)
+          })
+          .withFailureHandler(e => console.log(e))
+          .getMyMailAddress()
+      }
+
+      getClassesBy = (slct) => {
+        const v = slct[slct.selectedIndex].value
+        window.selectedGradeValue = v
+        console.log(v, window.selectedGradeValue)
+
+        const element = document.getElementById('subjects-body')
+        element.textContent = null
+
+        showLoadingSpinner()
+        hideSubjectEmptyMsg()
+        google.script.run
+          .withSuccessHandler(classes => {
+            if(!classes.length) {
+              hideLoadingSpinner()
+              showSubjectEmptyMsg()
+              return
+            }
+
+            for(let i = 0; i < classes.length; i ++) {
+              let _ = ''
+              _ += '<tr>'
+              _ += `<td class="subject-name">${classes[i].subject}</td>`
+              _ += `<td class="lecture-name">${classes[i].lecture}</td>`
+              _ += `<td class="external-url-icon" onclick="openUrl('${classes[i].classPackageFolderUrl}')">`
+              _ += `<div>${externalLinkIcon}</div>`
+              _ += '</td>'
+              if(classes[i].minutesPaperFormUrl) {
+                _ += `<td class="external-url-icon" onclick="openUrl('${classes[i].minutesPaperFormUrl}')">`
+                if(classes[i].isAttendance) {
+                  _ += `<div class="attendance-mng">出席管理</div>`
+                } else {
+                  _ += `<div>${externalLinkIcon}</div>`
+                }
+                _ += '</td>'
+              } else {
+                _ += '<td></td>'
+              }
+              _ += '<td>'
+              if(classes[i].published) {
+                _ += `<button type="button" class="btn btn-outline-danger" onclick="setPrivate(this, '${classes[i].classPackageFolderUrl}')">非公開にする</button>`
+              } else {
+                _ += `<button type="button" class="btn btn-outline-primary" onclick="setReady(this, '${classes[i].classPackageFolderUrl}')">公開する</button>`
+              }
+              _ += '</td>'
+              _ += '</tr>'
+              element.insertAdjacentHTML('beforeend', _)
+            }
+            hideLoadingSpinner()
+          })
+          .withFailureHandler(error => {
+            console.log(error)
+            hideLoadingSpinner()
+            showSubjectEmptyMsg()
+          })
+          .getClasses({ identifier: v})
+      }
+
+      const showLoadingSpinner = () => {
+        document.getElementById('loading-spinner').removeAttribute('hidden')
+      }
+
+      const hideLoadingSpinner = () => {
+        document.getElementById('loading-spinner').setAttribute('hidden', true)
+      }
+
+      const showSubjectEmptyMsg = () => {
+        document.getElementById('subject-empty-msg').removeAttribute('hidden')
+      }
+
+      const hideSubjectEmptyMsg = () => {
+        document.getElementById('subject-empty-msg').setAttribute('hidden', true)
+      }
+
+      const openUrl = (url) => {
+        window.open(url, '_blank')
+      }
+
+      const setReady = (btn, url) => {
+        const v = window.selectedGradeValue
+        google.script.run
+          .withSuccessHandler(() => {
+            console.log('setReady success!')
+            btn.removeAttribute('class')
+            btn.removeAttribute('onclick')
+            btn.setAttribute('class', 'btn btn-outline-danger')
+            btn.setAttribute('onclick', `setPrivate(this, '${url}')`)
+            btn.textContent = null
+            btn.insertAdjacentHTML('afterbegin', '非公開にする')
+          })
+          .withFailureHandler((e) => console.log(e))
+          .setReady({ identifier: v, classPackageUrl: url})
+      }
+
+      const setPrivate = (btn, url) => {
+        const v = window.selectedGradeValue
+        google.script.run
+          .withSuccessHandler(() => {
+            console.log('setPrivate success!')
+            btn.removeAttribute('class')
+            btn.removeAttribute('onclick')
+            btn.setAttribute('class', 'btn btn-outline-primary')
+            btn.setAttribute('onclick', `setReady(this, '${url}')`)
+            btn.textContent = null
+            btn.insertAdjacentHTML('afterbegin', '公開する')
+          })
+          .withFailureHandler((e) => console.log(e))
+          .setPrivate({ identifier: v, classPackageUrl: url})
+      }
+
+      const externalLinkIcon = `
+          <svg class="bi bi-link-45deg link-icon" width="1.5em" height="1.5em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M4.715 6.542L3.343 7.914a3 3 0 104.243 4.243l1.828-1.829A3 3 0 008.586 5.5L8 6.086a1.001 1.001 0 00-.154.199 2 2 0 01.861 3.337L6.88 11.45a2 2 0 11-2.83-2.83l.793-.792a4.018 4.018 0 01-.128-1.287z"/>
+            <path d="M5.712 6.96l.167-.167a1.99 1.99 0 01.896-.518 1.99 1.99 0 01.518-.896l.167-.167A3.004 3.004 0 006 5.499c-.22.46-.316.963-.288 1.46z"/>
+            <path d="M6.586 4.672A3 3 0 007.414 9.5l.775-.776a2 2 0 01-.896-3.346L9.12 3.55a2 2 0 012.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 00-4.243-4.243L6.586 4.672z"/>
+            <path d="M10 9.5a2.99 2.99 0 00.288-1.46l-.167.167a1.99 1.99 0 01-.896.518 1.99 1.99 0 01-.518.896l-.167.167A3.004 3.004 0 0010 9.501z"/>
+          </svg>
+        `
+    </script>
+  </body>
+</html>
