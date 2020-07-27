@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/octicons/8.5.0/build.css">
+    <style type="text/css">
+      #user-info {
+        height: 70px;
+        padding: 10px;
+      }
+
+      #re-render-classes {
+        height: 70px;
+        padding: 10px;
+      }
+
+      #loading-spinner {
+        margin-top: 8px;
+        margin-left: 10px;
+      }
+
+      .table-wrapper {
+        overflow-y: auto;
+        height: calc(100vh - 140px);
+      }
+
+      .table-wrapper thead th {
+        position: sticky;
+        top: 0;
+        border-top: 2px;
+        text-align: center;
+      }
+
+      .table-wrapper tbody td {
+        text-align: center;
+      }
+
+      .external-url-icon {
+        vertical-align: middle;
+      }
+
+      .external-url-icon div {
+        width: 1.5em;
+        margin: 0 auto;
+      }
+
+      .external-url-icon div:hover {
+        cursor: pointer;
+      }
+
+      .external-url-icon div svg {
+        color: #1A0DAB;
+      }
+
+      ul, #myUL {
+        list-style-type: none;
+      }
+
+      /* Remove margins and padding from the parent ul */
+      #myUL {
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+      }
+      
+      #myUL ul {
+        width: 95vw;
+      }
+
+      .caret-row {
+        border-bottom: 1px solid #DDD;
+        margin-bottom: 10px;
+      }
+
+      /* Style the caret/arrow */
+      .caret {
+        cursor: pointer;
+        user-select: none; /* Prevent text selection */
+      }
+
+      /* Create the caret/arrow with a unicode, and style it */
+      .caret::before {
+        content: "\25B6";
+        color: black;
+        display: inline-block;
+        margin-right: 6px;
+      }
+
+      /* Rotate the caret/arrow icon when clicked on (using JavaScript) */
+      .caret-down::before {
+        transform: rotate(90deg);
+      }
+
+      /* Hide the nested list */
+      .nested {
+        display: none;
+      }
+
+      /* Show the nested list when the user clicks on the caret/arrow (with JavaScript) */
+      .active {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+
+    <div class="container-fluid">
+
+      <div id="user-info" class="row"></div>
+      <div id="re-render-classes" class="row">
+        <button type="button" class="btn btn-info" onclick="renderClasses()">更新</button>
+        <div id="loading-spinner" hidden class="spinner-border text-primary" role="status">
+          <span class="sr-only">Loading...</span>
+        </div>
+      </div>
+      <div class="row table-wrapper">
+        <ul id="myUL"></ul>
+      </div>
+    </div>
+
+    <script>
+      let _classes = []
+    
+      window.onload = () => {
+        renderClasses()
+
+        google.script.run
+          .withSuccessHandler((mailAddress) => {
+            const _  = '<h4>' + mailAddress + ' さん</h4>'
+            document.getElementById('user-info').insertAdjacentHTML('afterbegin', _)
+          })
+          .withFailureHandler(e => console.log(e))
+          .getMyMailAddress()
+      }
+
+      const renderClasses = () => {
+        showLoadingSpinner()
+        google.script.run
+          .withSuccessHandler(classes => {
+            _classes = classes
+          
+            const subjectSet = new Set()
+            classes.forEach(_ => {
+              subjectSet.add(_.subject)
+            })
+
+            const element = document.getElementById('myUL')
+            element.textContent = null
+            subjectSet.forEach(c => {
+              let _ = ''
+              _ += `<li class="caret-row"><h4 class="caret">${c}</h4>`
+              _ += '<ul class="nested">'
+              _ += '<table class="table table-striped">'
+              _ += '<thead class="thead-dark">'
+              _ += '<tr>'
+              _ += '<th scope="col" style="width: 50%">講義</th>'
+              _ += '<th scope="col" style="width: 20%">授業</th>'
+              _ += '<th scope="col" style="width: 30%">ミニッツ<br>ペーパー</th>'
+              _ += '</tr>'
+              _ += '</thead>'
+              _ += `<tbody id="${c}">`
+              element.insertAdjacentHTML('beforeend', _)
+              const _element = document.getElementById(c)
+              classes.filter(_ => _.subject === c).forEach(cl => {
+                _ = ''
+                _ += '<tr>'
+                _ += `<th scope="row">${cl.lecture}</th>`
+                if(cl.classPackageFolderUrl) {
+                  _ += `<td class="external-url-icon" onclick="openUrl('${cl.classPackageFolderUrl}')">`
+                  _ += `<div>${externalLinkIcon}</div>`
+                  _ += '</td>'
+                } else {
+                  _ += '<td></td>'
+                }
+                if(cl.minutesPaperFormUrl) {
+                  _ += `<td class="external-url-icon" onclick="openUrl('${cl.minutesPaperFormUrl}')">`
+                  _ += `<div>${externalLinkIcon}</div>`
+                  _ += '</td>'
+                } else {
+                  _ += '<td></td>'
+                }
+                _ += '</tr>'
+                _element.insertAdjacentHTML('beforeend', _)
+              })
+              _ = ''
+              _ += '</tbody>'
+              _ += '</table>'
+              _ += '</ul>'
+              _ += '</li>'
+              element.insertAdjacentHTML('beforeend', _)
+            })
+
+            hideLoadingSpinner()
+
+            addToggleEvent()
+          })
+          .withFailureHandler(e => console.log(e))
+          .getClasses()
+      }
+
+      const addToggleEvent = () => {
+        var toggler = document.getElementsByClassName("caret");
+        var i;
+
+        for (i = 0; i < toggler.length; i++) {
+          toggler[i].addEventListener("click", function() {
+            this.parentElement.querySelector(".nested").classList.toggle("active");
+            this.classList.toggle("caret-down");
+          });
+        }
+      }
+
+      const showLoadingSpinner = () => {
+        document.getElementById('loading-spinner').removeAttribute('hidden')
+      }
+
+      const hideLoadingSpinner = () => {
+        document.getElementById('loading-spinner').setAttribute('hidden', true)
+      }
+      
+      const openUrl = (url) => {
+        window.open(url, '_blank')
+      }
+
+      const externalLinkIcon = `
+        <svg class="bi bi-link-45deg" width="1.5em" height="1.5em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <path d="M4.715 6.542L3.343 7.914a3 3 0 104.243 4.243l1.828-1.829A3 3 0 008.586 5.5L8 6.086a1.001 1.001 0 00-.154.199 2 2 0 01.861 3.337L6.88 11.45a2 2 0 11-2.83-2.83l.793-.792a4.018 4.018 0 01-.128-1.287z"/>
+          <path d="M5.712 6.96l.167-.167a1.99 1.99 0 01.896-.518 1.99 1.99 0 01.518-.896l.167-.167A3.004 3.004 0 006 5.499c-.22.46-.316.963-.288 1.46z"/>
+          <path d="M6.586 4.672A3 3 0 007.414 9.5l.775-.776a2 2 0 01-.896-3.346L9.12 3.55a2 2 0 012.83 2.83l-.793.792c.112.42.155.855.128 1.287l1.372-1.372a3 3 0 00-4.243-4.243L6.586 4.672z"/>
+          <path d="M10 9.5a2.99 2.99 0 00.288-1.46l-.167.167a1.99 1.99 0 01-.896.518 1.99 1.99 0 01-.518.896l-.167.167A3.004 3.004 0 0010 9.501z"/>
+        </svg>
+      `
+    </script>
+  </body>
+</html>
