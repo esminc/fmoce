@@ -1,3 +1,5 @@
 node_modules/
 dist/
 **/.clasprc.json
+**/.clasp.*.json
+!**/.clasp.example.json
