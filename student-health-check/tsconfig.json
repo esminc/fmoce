@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./",
+    "sourceMap": true,
+    "target": "es6",
+    "module": "es2015",
+    "lib": [
+      "ES6"
+    ],
+    "paths": {
+      "@service/*": ["src/service/*"],
+      "@util/*": ["src/util/*"]
+    }
+  }
+}
