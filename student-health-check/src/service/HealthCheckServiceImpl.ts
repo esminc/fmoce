@@ -8,7 +8,7 @@ export class HealthCheckServiceImpl implements HealthCheckService {
   ) {}
 
   findByMailAddress(mailAddress: string): HealthCheck[] {
-    const sheet = SpreadsheetApp.openById(this.spreadSheetId).getSheetByName('健康管理')
+    const sheet = SpreadsheetApp.openById(this.spreadSheetId).getSheetByName('フォームの回答 1') // フォーム回答のデフォルトのシート名
     const rows = sheet.getDataRange().getValues()
       .filter(_ => _[1] === mailAddress)
       .filter(_ => DateTimeUtil.isLessThanTwoWeeks(_[0]))
