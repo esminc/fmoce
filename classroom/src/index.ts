@@ -18,11 +18,10 @@ const onOpen = () => {
 // 講義名同期のトリガーを自動で作る
 const createLectureTitleTriggers = (): void => {
   [
-    'sync1', 'sync2', 'sync3', 'sync4', 'sync5',
-    'sync6', 'sync7', 'sync8', 'sync9', 'sync10',
+    'sync1', 'sync2', 'sync3', 'sync4', 'sync5','sync6'
   ].forEach((_, index) => {
-    // sync1~5は2時に、sync5~10は3時に実行する。実行時間の制限のため
-    const hour = index < 5 ? 2 : 3
+    // sync1~3は2時に、sync4~6は3時に実行する。実行時間の制限のため
+    const hour = index < 4 ? 2 : 3
     ScriptApp
       .newTrigger(_)
       .timeBased()
@@ -141,22 +140,6 @@ const sync6 = () => {
   syncLectureTitle(6)
 }
 
-const sync7 = () => {
-  syncLectureTitle(7)
-}
-
-const sync8 = () => {
-  syncLectureTitle(8)
-}
-
-const sync9 = () => {
-  syncLectureTitle(9)
-}
-
-const sync10 = () => {
-  syncLectureTitle(10)
-}
-
 const syncLectureTitle = (grade: Constant.Grade) => {
   try {
     const timeTableService = new Service.TimeTableService(ROOT_FOLDER_ID)
@@ -174,10 +157,6 @@ global.sync3 = sync3
 global.sync4 = sync4
 global.sync5 = sync5
 global.sync6 = sync6
-global.sync7 = sync7
-global.sync8 = sync8
-global.sync9 = sync9
-global.sync10 = sync10
 global.onOpen = onOpen
 global.createLectureTitleTriggers = createLectureTitleTriggers
 global.setProperties = setProperties
