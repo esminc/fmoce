@@ -1,5 +1,5 @@
 export type Facility = {
-  grade: 1 | 2 | 3 | 4 | 5 | 6 | 5 | 7 | 8 | 9 | 10
+  grade: 1 | 2 | 3 | 4 | 5 | 6
 }
 
 const facilityOf = (identifier: string): Facility => {
@@ -10,10 +10,6 @@ const facilityOf = (identifier: string): Facility => {
     case '4':  return {grade: 4}
     case '5':  return {grade: 5}
     case '6':  return {grade: 6}
-    case '7':  return {grade: 7}
-    case '8':  return {grade: 8}
-    case '9':  return {grade: 9}
-    case '10': return {grade: 10}
   }
 }
 
