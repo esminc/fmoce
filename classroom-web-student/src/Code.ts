@@ -1,3 +1,8 @@
+/*
+Copyright (c) 2020 University of Fukui.  All rights reserved.
+Please see the license.gs for the copyright licensing conditions attached to this codebase, including copies of the licenses concerned.
+*/
+
 import * as Service from '@/service'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
