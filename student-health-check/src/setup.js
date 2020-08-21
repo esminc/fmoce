@@ -1,3 +1,7 @@
+/*
+Copyright (c) 2020 University of Fukui.  All rights reserved.
+Please see the license.gs for the copyright licensing conditions attached to this codebase, including copies of the licenses concerned.
+*/
 function setup() {
   const healthCheckSheetUrl = '健康管理スプレッドシートのURLを入力してください。※末尾の /edit 以降は削除してください。'
   /**
