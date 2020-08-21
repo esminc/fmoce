@@ -1,3 +1,8 @@
+/*
+Copyright (c) 2020 University of Fukui.  All rights reserved.
+Please see the license.gs for the copyright licensing conditions attached to this codebase, including copies of the licenses concerned.
+*/
+
 import * as Service from '@/service'
 import type * as Constant from '@/constant'
 import type { CreateLectureFoldersResult } from '@/service/SchoolClassService'
