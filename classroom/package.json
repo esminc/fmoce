@@ -2,11 +2,12 @@
   "name": "classroom",
   "version": "0.0.1",
   "description": "",
+  "license" : "SEE LICENSE IN src/license.js",
   "main": "index.js",
   "scripts": {
     "lint": "eslint src/**/*.ts",
     "test": "jest",
-    "build": "rimraf dist && webpack && cpx appsscript.json dist",
+    "build": "rimraf dist && webpack && cpx appsscript.json dist && cpx src/license.js dist",
     "push:stg": "npm run build && export NODE_ENV=staging && ./deploy",
     "push:fmoce": "npm run build && export NODE_ENV=fmoce && ./deploy"
   },
